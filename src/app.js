@@ -1,3 +1,58 @@
+//- canvas elements
+function createLights() {
+  const elements = []
+  let lastElement = undefined
+
+  const lights = (context) => {
+    let last = undefined
+    context.fillStyle = '000'
+    for (const element of elements) {
+      // light
+      const { x, y, stringLength } = element
+      context.beginPath()
+      context.arc(x, y, 5, 0, Math.PI * 2)
+      context.fill()
+
+      // line
+      if (last) {
+        context.beginPath()
+        context.moveTo(last.x, last.y)
+        context.bezierCurveTo(last.x, last.y + stringLength, x, y + stringLength, x, y)
+        context.stroke()
+      }
+
+      // end
+      last = element
+    }
+  }
+
+  const add = (x, y) => {
+    const distance = lastElement ? Math.sqrt((lastElement.x - x) ** 2 + (lastElement.y - y) ** 2) : 0
+    const element = {
+      x,
+      y,
+      stringLength: distance,
+      life: 0,
+    }
+
+    elements.push(element)
+    lastElement = element
+  }
+
+  const updater = () => {
+    for (const element of elements) {
+      element.life += 1
+    }
+  }
+
+  return {
+    lights,
+    add,
+    updater,
+  }
+}
+
+//- application
 function animate(callback) {
   const tps = 1000 / 60
   let lastTime = 0
@@ -47,33 +102,11 @@ function background(context, info) {
   context.fillRect(0, 0, info.width, info.height)
 }
 
-function createLights() {
-  const elements = []
-
-  const lights = (context) => {
-    context.fillStyle = '000'
-    for (const { x, y } of elements) {
-      context.beginPath()
-      context.arc(x, y, 5, 0, Math.PI * 2)
-      context.fill()
-    }
-  }
-
-  const add = (x, y) => {
-    elements.push({ x, y })
-  }
-
-  return {
-    lights,
-    add,
-  }
-}
-
 function main() {
   const canvas = document.createElement('canvas')
   const context = canvas.getContext('2d')
   const { draw, resize } = createDrawer(context)
-  const { lights, add } = createLights(context)
+  const { lights, add, updater: lightUpdater } = createLights(context)
   const resizeFunc = () => {
     canvas.width = window.innerWidth
     canvas.height = window.innerHeight
@@ -82,12 +115,13 @@ function main() {
 
   document.body.appendChild(canvas)
   window.addEventListener('resize', resizeFunc)
-  canvas.addEventListener('mousedown', e => {
+  canvas.addEventListener('mouseup', e => {
     add(e.clientX, e.clientY)
   })
 
   resizeFunc()
   animate(function () {
+    lightUpdater()
     draw(background)
     draw(lights)
   })
