@@ -81,9 +81,9 @@ function animate(callback) {
     lastTime = time
     elapsed += delta
 
-    while (elapsed >= tps) {
+    if (elapsed >= tps) {
       callback()
-      elapsed -= tps
+      elapsed = 0
     }
 
     requestAnimationFrame(tick)
