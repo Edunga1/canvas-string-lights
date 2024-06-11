@@ -7,14 +7,15 @@ function distance(x1, y1, x2, y2) {
 function drawLooseString(context, t, x1, y1, x2, y2, stringLength) {
   const rightThickness = 10
   const leftThickness = 10
-  const yDeltaScalar = 5
-  const yDelta = Math.abs(Math.sin(t / 10) * yDeltaScalar)
-  const deltaStringLength = stringLength + yDelta
+  const yDeltaScalar = 50
+  const timeModifier = Math.min(5 / t, 1.0)
+  const yDelta = Math.abs(Math.cos(t / 5) * yDeltaScalar) * timeModifier
+  const stringDepth = stringLength + yDelta
   context.beginPath()
   context.moveTo(x1, y1)
-  context.bezierCurveTo(x1, y1 + deltaStringLength, x2, y2 + deltaStringLength, x2, y2)
+  context.bezierCurveTo(x1, y1 + stringDepth, x2, y2 + stringDepth, x2, y2)
   context.lineTo(x2, y2 + rightThickness)
-  context.bezierCurveTo(x2, y2 + deltaStringLength, x1, y1 + deltaStringLength, x1, y1 + leftThickness)
+  context.bezierCurveTo(x2, y2 + stringDepth, x1, y1 + stringDepth, x1, y1 + leftThickness)
   context.closePath()
   context.fill()
 }
@@ -28,6 +29,14 @@ function createLights() {
 
   function distanceToLast(x, y) {
     return lastElement ? distance(lastElement.x, lastElement.y, x, y) : 0
+  }
+
+  function newElement(x, y) {
+    return { x, y, stringLength: distanceToLast(x, y), life: 0 }
+  }
+
+  function updateElement(element) {
+    element.life += 1
   }
 
   const lights = (context) => {
@@ -64,25 +73,13 @@ function createLights() {
   }
 
   const add = (x, y) => {
-    const element = {
-      x,
-      y,
-      stringLength: distanceToLast(x, y),
-      life: 0,
-    }
-
+    const element = newElement(x, y)
     elements.push(element)
     lastElement = element
   }
 
   const addTemporary = (x, y) => {
-    const element = {
-      x,
-      y,
-      stringLength: distanceToLast(x, y),
-      life: 0,
-    }
-
+    const element = newElement(x, y)
     temporaryElements.push(element)
   }
 
@@ -92,10 +89,10 @@ function createLights() {
 
   const updater = () => {
     for (const element of elements) {
-      element.life += 1
+      updateElement(element)
     }
     for (const element of temporaryElements) {
-      element.life += 1
+      updateElement(element)
     }
   }
 
