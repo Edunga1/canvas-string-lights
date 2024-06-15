@@ -122,7 +122,7 @@ function createLights() {
 
   const move = (id, x, y) => {
     const element = getElement(id)
-    if (element) {
+    if (element !== undefined) {
       element.x = x
       element.y = y
     }
@@ -130,9 +130,6 @@ function createLights() {
 
   const highlight = (id, only) => {
     for (const element of elements) {
-      if (element.id === id) {
-        console.log('wow')
-      }
       element.highlighted = only ? element.id === id : element.id === id || element.highlighted
     }
   }
@@ -250,7 +247,7 @@ function main() {
       addTemporary(e.clientX, e.clientY)
     }
 
-    if (movingLight) {
+    if (movingLight !== undefined) {
       moveLight(movingLight, e.clientX, e.clientY)
     }
 
