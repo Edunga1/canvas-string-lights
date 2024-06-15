@@ -4,13 +4,15 @@ function distance(x1, y1, x2, y2) {
 }
 
 //- drawers
-function drawLooseString(context, t, x1, y1, x2, y2, stringLength) {
+function drawLooseString(context, t, x1, y1, x2, y2, stringLength, blurry = false) {
   const rightThickness = 10
   const leftThickness = 10
   const yDeltaScalar = 50
-  const timeModifier = Math.min(5 / t, 1.0)
+  const timeModifier = Math.min(2 / t, 1.0)
   const yDelta = Math.abs(Math.cos(t / 5) * yDeltaScalar) * timeModifier
   const stringDepth = stringLength + yDelta
+
+  context.fillStyle = blurry ? '#ccc' : '#030'
   context.beginPath()
   context.moveTo(x1, y1)
   context.bezierCurveTo(x1, y1 + stringDepth, x2, y2 + stringDepth, x2, y2)
@@ -20,9 +22,22 @@ function drawLooseString(context, t, x1, y1, x2, y2, stringLength) {
   context.fill()
 }
 
+function drawLight(context, x, y, border = false, blurry = false) {
+  context.save()
+  context.fillStyle = blurry ? '#ccc' : '#fc0'
+  context.strokeStyle = border ? '#f00' : context.fillStyle
+  context.lineWidth = 1
+  context.beginPath()
+  context.arc(x, y, 5, 0, Math.PI * 2)
+  context.fill()
+  context.stroke()
+  context.restore()
+}
+
 //- canvas elements
 function createLights() {
-  const colorTemporary = '#ccc'
+  let lightIndex = 0
+  const searchRadius = 10
   const elements = []
   const temporaryElements = []
   let lastElement = undefined
@@ -31,8 +46,19 @@ function createLights() {
     return lastElement ? distance(lastElement.x, lastElement.y, x, y) : 0
   }
 
+  function getElement(id) {
+    return elements.find(e => e.id === id)
+  }
+
   function newElement(x, y) {
-    return { x, y, stringLength: distanceToLast(x, y), life: 0 }
+    return {
+      id: lightIndex++,
+      x,
+      y,
+      stringLength: distanceToLast(x, y),
+      life: 0,
+      highlighted: false,
+    }
   }
 
   function updateElement(element) {
@@ -40,35 +66,29 @@ function createLights() {
   }
 
   const lights = (context) => {
-    let last = undefined
+    let prev = undefined
 
-    context.fillStyle = '000'
     for (const element of elements) {
-      // light
       const { x, y, stringLength, life } = element
-      context.beginPath()
-      context.arc(x, y, 5, 0, Math.PI * 2)
-      context.fill()
 
-      // line
-      if (last) {
-        drawLooseString(context, life, last.x, last.y, x, y, stringLength)
+      if (prev) {
+        drawLooseString(context, life, prev.x, prev.y, x, y, stringLength, false)
       }
+
+      drawLight(context, x, y, element.highlighted, false)
 
       // end
-      last = element
+      prev = element
     }
 
-    context.fillStyle = colorTemporary
     for (const element of temporaryElements) {
       const { x, y, stringLength } = element
-      context.beginPath()
-      context.arc(x, y, 5, 0, Math.PI * 2)
-      context.fill()
 
-      if (last) {
-        drawLooseString(context, 0, last.x, last.y, x, y, stringLength)
+      if (prev) {
+        drawLooseString(context, 0, prev.x, prev.y, x, y, stringLength, true)
       }
+
+      drawLight(context, x, y, false, true)
     }
   }
 
@@ -96,12 +116,36 @@ function createLights() {
     }
   }
 
+  const findByPosition = (x, y) => {
+    return elements.find(e => distance(e.x, e.y, x, y) < searchRadius)?.id
+  }
+
+  const move = (id, x, y) => {
+    const element = getElement(id)
+    if (element) {
+      element.x = x
+      element.y = y
+    }
+  }
+
+  const highlight = (id, only) => {
+    for (const element of elements) {
+      if (element.id === id) {
+        console.log('wow')
+      }
+      element.highlighted = only ? element.id === id : element.id === id || element.highlighted
+    }
+  }
+
   return {
     lights,
     add,
     updater,
     addTemporary,
     clearTemporaries,
+    findByPosition,
+    move,
+    highlight,
   }
 }
 
@@ -157,6 +201,7 @@ function createDrawer(context) {
 
 function main() {
   let isPressed = false
+  let movingLight = undefined
   const canvas = document.createElement('canvas')
   const context = canvas.getContext('2d')
   const { draw, resize } = createDrawer(context)
@@ -166,6 +211,9 @@ function main() {
     updater: lightUpdater,
     addTemporary,
     clearTemporaries,
+    findByPosition,
+    move: moveLight,
+    highlight,
   } = createLights(context)
   const resizeFunc = () => {
     canvas.width = window.innerWidth
@@ -181,23 +229,36 @@ function main() {
 
   document.body.appendChild(canvas)
   window.addEventListener('resize', resizeFunc)
+
   canvas.addEventListener('mouseup', e => {
-    add(e.clientX, e.clientY)
-    clearTemporaries()
+    if (movingLight === undefined) {
+      add(e.clientX, e.clientY)
+      clearTemporaries()
+    }
     isPressed = false
+    movingLight = undefined
   })
-  canvas.addEventListener('mousedown', () => {
+
+  canvas.addEventListener('mousedown', e => {
     isPressed = true
+    movingLight = findByPosition(e.clientX, e.clientY)
   })
+
   canvas.addEventListener('mousemove', e => {
-    if (isPressed) {
+    if (isPressed && movingLight === undefined) {
       clearTemporaries()
       addTemporary(e.clientX, e.clientY)
     }
+
+    if (movingLight) {
+      moveLight(movingLight, e.clientX, e.clientY)
+    }
+
+    highlight(findByPosition(e.clientX, e.clientY), true)
   })
 
   resizeFunc()
-  animate(function () {
+  animate(function() {
     lightUpdater()
     draw(background)
     draw(lights)
