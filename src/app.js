@@ -159,7 +159,7 @@ function createLights() {
 }
 
 function background(context, info) {
-  context.fillStyle = 'rgb(37, 37, 21)'
+  context.fillStyle = 'rgb(15, 31, 6)'
   context.fillRect(0, 0, info.width, info.height)
 }
 
