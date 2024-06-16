@@ -10,9 +10,9 @@ function drawLooseString(context, t, x1, y1, x2, y2, stringLength, blurry = fals
   const yDeltaScalar = 50
   const timeModifier = Math.min(2 / t, 1.0)
   const yDelta = Math.abs(Math.cos(t / 5) * yDeltaScalar) * timeModifier
-  const stringDepth = stringLength + yDelta
+  const stringDepth = (stringLength + yDelta) * .9
 
-  context.fillStyle = blurry ? '#ccc' : '#030'
+  context.fillStyle = blurry ? 'rgb(204, 204, 204)' : 'rgba(26, 8, 0, .4)'
   context.beginPath()
   context.moveTo(x1, y1)
   context.bezierCurveTo(x1, y1 + stringDepth, x2, y2 + stringDepth, x2, y2)
@@ -23,14 +23,26 @@ function drawLooseString(context, t, x1, y1, x2, y2, stringLength, blurry = fals
 }
 
 function drawLight(context, x, y, border = false, blurry = false) {
+  function circle(x, y, r, color) {
+    const gradient = context.createRadialGradient(x, y, r / 4, x, y, r)
+    gradient.addColorStop(0, color)
+    gradient.addColorStop(1, 'rgba(0, 0, 0, 0)')
+    context.fillStyle = gradient
+    context.beginPath()
+    context.arc(x, y, r, 0, Math.PI * 2)
+    context.fill()
+  }
   context.save()
-  context.fillStyle = blurry ? '#ccc' : '#fc0'
+
+  if (blurry === false) {
+    circle(x, y, 200, 'rgba(255, 204, 100, 0.1)')
+  }
+
   context.strokeStyle = border ? '#f00' : context.fillStyle
   context.lineWidth = 1
-  context.beginPath()
-  context.arc(x, y, 5, 0, Math.PI * 2)
-  context.fill()
+  circle(x, y, 5, blurry ? 'rgb(204, 204, 204)' : 'rgb(255, 204, 150)')
   context.stroke()
+
   context.restore()
 }
 
@@ -147,7 +159,7 @@ function createLights() {
 }
 
 function background(context, info) {
-  context.fillStyle = 'ivory'
+  context.fillStyle = 'rgb(37, 37, 21)'
   context.fillRect(0, 0, info.width, info.height)
 }
 
