@@ -240,6 +240,7 @@ function main() {
   window.addEventListener('resize', resizeFunc)
 
   canvas.addEventListener('mouseup', e => {
+    if (isPressed !== true) return
     if (movingLight === undefined) {
       add(e.clientX, e.clientY)
       clearTemporaries()
@@ -249,6 +250,7 @@ function main() {
   })
 
   canvas.addEventListener('mousedown', e => {
+    if (e.button === 2) return
     isPressed = true
     movingLight = findByPosition(e.clientX, e.clientY)
   })
