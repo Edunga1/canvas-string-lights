@@ -23,10 +23,10 @@ function drawLooseString(context, t, x1, y1, x2, y2, stringLength, blurry = fals
 }
 
 function drawLight(context, x, y, border = false, blurry = false) {
-  function circle(x, y, r, color) {
-    const gradient = context.createRadialGradient(x, y, r / 4, x, y, r)
-    gradient.addColorStop(0, color)
-    gradient.addColorStop(1, 'rgba(0, 0, 0, 0)')
+  function gradient(x, y, r, color) {
+    const gradient = context.createRadialGradient(x, y, r / 20, x, y, r)
+    gradient.addColorStop(0, `rgba(${color}, .2)`)
+    gradient.addColorStop(1, `rgba(${color}, 0)`)
     context.fillStyle = gradient
     context.beginPath()
     context.arc(x, y, r, 0, Math.PI * 2)
@@ -35,12 +35,12 @@ function drawLight(context, x, y, border = false, blurry = false) {
   context.save()
 
   if (blurry === false) {
-    circle(x, y, 200, 'rgba(255, 204, 100, 0.1)')
+    gradient(x, y, 100, '255, 224, 120')
   }
 
   context.strokeStyle = border ? '#f00' : context.fillStyle
   context.lineWidth = 1
-  circle(x, y, 5, blurry ? 'rgb(204, 204, 204)' : 'rgb(255, 204, 150)')
+  gradient(x, y, 5, blurry ? '204, 204, 204' : '255, 204, 150')
   context.stroke()
 
   context.restore()
@@ -159,7 +159,7 @@ function createLights() {
 }
 
 function background(context, info) {
-  context.fillStyle = 'rgb(15, 31, 6)'
+  context.fillStyle = 'rgb(13, 20, 6)'
   context.fillRect(0, 0, info.width, info.height)
 }
 
