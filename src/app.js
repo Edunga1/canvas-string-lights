@@ -310,12 +310,9 @@ function main() {
   })
 
   // initial code
-  add(100, 100)
-  add(200, 120)
-  add(300, 200)
-  add(500, 400)
-  add(700, 300)
-  add(1000, 600)
+  for (let i = 0.5; i <= 10; i++) {
+    add(i * window.innerWidth / 10, 50 + i * window.innerHeight / 20)
+  }
 }
 
 main()
